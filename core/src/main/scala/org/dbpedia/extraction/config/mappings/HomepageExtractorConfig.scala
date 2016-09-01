@@ -12,6 +12,7 @@ object HomepageExtractorConfig
         "ar" -> Set("الموقع", "الصفحة الرسمية", "موقع", "الصفحة الرئيسية", "صفحة ويب", "موقع ويب"),
         "bg" -> Set("сайт", "уебсайт"),
         "ca" -> Set("pàgina", "web", "lloc"),
+        "cs" -> Set("website", "homepage", "web", "site", "stránka", "hlavní stránka", "domovská stránka"),
         "de" -> Set("website", "homepage", "webpräsenz", "web", "site", "siteweb", "site web"),/*cleanup*/
         "el" -> Set("ιστότοπος", "ιστοσελίδα"),
         "en" -> Set("website", "homepage", "web", "site"),
@@ -38,6 +39,7 @@ object HomepageExtractorConfig
         "ar" -> "وصلات خارجية",
         "bg" -> "Външни препратки",
         "ca" -> "(?:Enllaços externs|Enllaço extern)",
+        "cs" -> "Externí (?:odkazy|zdroje)",
         "de" -> "Weblinks?",
         "el" -> "(?:Εξωτερικοί σύνδεσμοι|Εξωτερικές συνδέσεις)",
         "en" -> "External links?",
@@ -62,6 +64,7 @@ object HomepageExtractorConfig
         "ar" -> "رسمي",
         "bg" -> "официален",
         "ca" -> "oficial",
+        "cs" -> "oficiální",
         "de" -> "offizielle",
         "el" -> "(?:επίσημος|επίσημη)",
         "en" -> "official",
@@ -85,6 +88,7 @@ object HomepageExtractorConfig
     // Map(language -> Map(templateName -> templatePropertyKey))
     private val templateOfficialWebsiteMap = Map(
         "ca" -> Map("Oficial" -> "1"),
+        "cs" -> Map("Oficiální stránky" -> "1"),
         "bg" -> Map("Официален сайт" -> "1"),
         /* "it" -> Map("Sito Ufficiale" -> "1"), This does not exist, yet */
         "el" -> Map("Επίσημη ιστοσελίδα" -> "1"),

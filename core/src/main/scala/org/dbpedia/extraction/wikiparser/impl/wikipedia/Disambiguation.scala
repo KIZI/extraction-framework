@@ -46,7 +46,7 @@ object Disambiguation
     private def ch_disambiguations = Set("Disambig")
     private def ckb_disambiguations = Set("ڕوونکردنەوە")
     private def crh_disambiguations = Set("Disambig","Çoq manalı")
-    private def cs_disambiguations = Set("Rozcestník")
+    private def cs_disambiguations = Set("Rozcestník","Rozcestník - 2 znaky","Rozcestník - 3 znaky","Rozcestník - 4 znaky","Rozcestník - chemie","Rozcestník - jméno","Rozcestník - kostel","Rozcestník - loď","Rozcestník - místopisné jméno","Rozcestník - mykologie","Rozcestník - příjmení","Rozcestník - sakrální stavba")
     private def csb_disambiguations = Set("Disambig","Starnë_ùjednoznacznieniô")
     private def cu_disambiguations = Set("Мъногосъмꙑслиѥ","Мъногосъмꙑ́слиѥ","Disambig","Мъногосъмыслиѥ")
     private def cv_disambiguations = Set("Disambig")
