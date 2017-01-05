@@ -2,11 +2,11 @@ package org.dbpedia.extraction.mappings
 
 import org.dbpedia.extraction.wikiparser._
 import org.dbpedia.extraction.sources.FileSource
-import io.Source
 import org.dbpedia.extraction.util.Language
 import java.io.{FilenameFilter, File}
-import java.lang.IllegalStateException
 import org.junit.{Ignore, Test}
+
+import scala.io.Source
 
 @Ignore  // unignore to test; MediaWiki server has to be in place
 class AbstractExtractorTest
@@ -51,12 +51,14 @@ class AbstractExtractorTest
         val page = new FileSource(testDataRootDir, Language.English, _ endsWith fileName).head
 
       //return empty Abstract in case that the parser Returned None
+      //val generatedAbstract = extractor.retrievePage(n.title)
       parser(page) match {
-        case Some(n) =>  val generatedAbstract = extractor.retrievePage(n.title)
-                         extractor.retrievePage(page.title/*, generatedAbstract*/)
+        case Some(n) => extractor.retrievePage(page.title, page.id/*, generatedAbstract*/) match{
+            case Some(l) => l
+            case None => ""
+        }
         case None => ""
       }
-
     }
 
     private def gold(fileName : String) : String =

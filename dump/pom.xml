@@ -38,6 +38,8 @@
 							<mainClass>org.dbpedia.extraction.dump.sql.Import</mainClass>
 							<jvmArgs>
 								<jvmArg>-server</jvmArg>
+								<jvmArg>-DtotalEntitySizeLimit=2147480000</jvmArg>
+								<jvmArg>-Djdk.xml.totalEntitySizeLimit=2147480000</jvmArg>
 							</jvmArgs>
 							<args>
 								<!-- base folder of downloaded dumps -->
@@ -51,9 +53,12 @@
 								<arg>true</arg> 
 								<!-- file name: pages-articles.xml{,.bz2,.gz} -->
 								<arg>pages-articles.xml.bz2</arg>
+								<!-- number of parallel imports; this number depends on the number of processors in use
+									and the type of hard disc (hhd/ssd) and how many parallel files reads it can support -->
+								<arg>1</arg>
 								<!-- languages and article count ranges, comma-separated, e.g. "de,en" 
 									or "@mappings" etc. -->
-								<arg>bg,bn,bpy,br,bug,ca,ceb,ce,ckb,commons,cv,cy,el,et,eu,fa,fi,fo,fy,ga,gd,gl,gu,hi,hr,ht,hu,hy,ia,id,io,is,it,jv,ka,kk,kn,ku,ky,la,lb,lmo,lt,lv,map-bms,mg,mk,ml,mn,mr,ms,mt,my,mzn,nah,nap,nds,ne,new,nn,no,oc,pa,pms,pnb,pt,qu,sah,sa,scn,sco,sh,simple,si,sk,sl,sq,sr,su,sv,sw,ta,te,tg,th,tl,tr,tt,uk,ur,uz,vec,vi,vo,war,wa,wikidata,yi,yo,zh-min-nan,zh-yue,zh</arg>
+								<arg>@downloaded</arg>
 							</args>
 						</launcher>
 
@@ -63,6 +68,8 @@
 
 							<jvmArgs>
 								<jvmArg>-server</jvmArg>
+								<jvmArg>-DtotalEntitySizeLimit=2147480000</jvmArg>
+								<jvmArg>-Djdk.xml.totalEntitySizeLimit=2147480000</jvmArg>
 								<!-- <jvmArg>-Xmx4096m</jvmArg> <jvmArg>-XX:+HeapDumpOnOutOfMemoryError</jvmArg>
 									<jvmArg>-XX:+UseConcMarkSweepGC</jvmArg> <jvmArg>-XX:+PrintGC</jvmArg> <jvmArg>-XX:+PrintGCTimeStamps</jvmArg> 
 									<jvmArg>-Dhttp.proxyHost=proxy.server.com</jvmArg> <jvmArg>-Dhttp.proxyPort=80</jvmArg> 

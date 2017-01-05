@@ -1,22 +1,26 @@
 package org.dbpedia.extraction.mappings
 
-import java.io.{InputStream, OutputStreamWriter}
+import java.io.{File, InputStream, OutputStreamWriter}
 import java.net.URL
-import java.util.logging.{Level, Logger}
+import java.util.logging.Logger
 
 import org.dbpedia.extraction.destinations.{DBpediaDatasets, Quad, QuadBuilder}
 import org.dbpedia.extraction.ontology.Ontology
-import org.dbpedia.extraction.util.Language
+import org.dbpedia.extraction.util.{JsonConfig, Language}
 import org.dbpedia.extraction.wikiparser._
-import org.dbpedia.util.text.ParseExceptionIgnorer
 import org.dbpedia.util.text.html.{HtmlCoder, XmlCodes}
 
 import scala.io.Source
 import scala.language.reflectiveCalls
-import scala.xml.XML
+import scala.util.{Failure, Success, Try}
+import scala.xml.{NodeSeq, XML}
 
 /**
- * Extracts page abstracts.
+ * Extracts wiki texts like abstracts or sections in html.
+  * NOTE: This class is not only used for abstract extraction but for extracting wiki text of the whole page
+  * The NifAbstract Extractor is extending this class.
+  * All configurations are now outsourced to //extraction-framework/core/src/main/resources/mediawikiconfig.json
+  * change the 'publicParams' entries for tweaking endpoint and time parameters
  *
  * From now on we use MobileFrontend for MW <2.21 and TextExtracts for MW > 2.22
  * The patched mw instance is no longer needed except from minor customizations in LocalSettings.php
@@ -36,61 +40,78 @@ class AbstractExtractor(
 )
 extends PageNodeExtractor
 {
-    //TODO make this configurable
-    protected def apiUrl: String = "http://localhost:8008/mediawiki/api.php"
+  protected val logger = Logger.getLogger(classOf[AbstractExtractor].getName)
+  this.getClass.getClassLoader.getResource("myproperties.properties")
+  protected val abstractParams = new JsonConfig(this.getClass.getClassLoader.getResource("mediawikiconfig.json"))
+  protected val publicParames = abstractParams.getMap("publicParams")
+  protected val protectedParams = abstractParams.getMap("protectedParams")
 
-    private val maxRetries = 5
+  protected val failLogFile = new File(publicParames.get("failedPagesLog").get.asText())
+  failLogFile.createNewFile()
+
+  protected def apiUrl: URL = new URL(publicParames.get("apiUrl").get.asText())
+  require(Try{apiUrl.openConnection().connect()} match {case Success(x)=> true case Failure(e) => false}, "can not connect to the apiUrl")
+
+  protected val maxRetries = publicParames.get("maxRetries").get.asInt
+  require(maxRetries <= 10 && maxRetries > 0, "maxRetries has to be in the interval of [1,10]")
 
     /** timeout for connection to web server, milliseconds */
-    private val connectMs = 2000
+  protected val connectMs = publicParames.get("connectMs").get.asInt
+  require(connectMs > 200, "connectMs shall be more than 200 ms!")
 
     /** timeout for result from web server, milliseconds */
-    private val readMs = 8000
+  protected val readMs = publicParames.get("readMs").get.asInt
+  require(readMs > 1000, "readMs shall be more than 1000 ms!")
 
     /** sleep between retries, milliseconds, multiplied by CPU load */
-    private val sleepFactorMs = 1000
+  protected val sleepFactorMs = publicParames.get("sleepFactorMs").get.asInt
+  require(sleepFactorMs > 200, "sleepFactorMs shall be more than 200 ms!")
 
-    private val language = context.language.wikiCode
 
-    private val logger = Logger.getLogger(classOf[AbstractExtractor].getName)
+  /** protected params ... */
+  protected val isTestRun = protectedParams.get("isTestRun").get.asBoolean()
+
+  protected val xmlPath = protectedParams.get("apiNormalXmlPath").get.asText().split(",").map(_.trim)
+
+  protected val language = context.language.wikiCode
 
     //private val apiParametersFormat = "uselang="+language+"&format=xml&action=parse&prop=text&title=%s&text=%s"
-    private val apiParametersFormat = "uselang="+language+"&format=xml&action=query&prop=extracts&exintro=&explaintext=&titles=%s"
+  protected val apiParametersFormat = "uselang="+language + protectedParams.get("apiNormalParametersFormat").get.asText()
 
     // lazy so testing does not need ontology
-    private lazy val shortProperty = context.ontology.properties("rdfs:comment")
+  protected lazy val shortProperty = context.ontology.properties(protectedParams.get("shortProperty").get.asText())
 
     // lazy so testing does not need ontology
-    private lazy val longProperty = context.ontology.properties("abstract")
-    
-    private lazy val longQuad = QuadBuilder(context.language, DBpediaDatasets.LongAbstracts, longProperty, null) _
-    private lazy val shortQuad = QuadBuilder(context.language, DBpediaDatasets.ShortAbstracts, shortProperty, null) _
-    
-    override val datasets = Set(DBpediaDatasets.LongAbstracts, DBpediaDatasets.ShortAbstracts)
+  protected lazy val longProperty = context.ontology.properties(protectedParams.get("longProperty").get.asText())
 
-    private val osBean = java.lang.management.ManagementFactory.getOperatingSystemMXBean()
+  protected lazy val longQuad = QuadBuilder(context.language, DBpediaDatasets.LongAbstracts, longProperty, null) _
+  protected lazy val shortQuad = QuadBuilder(context.language, DBpediaDatasets.ShortAbstracts, shortProperty, null) _
 
-    private val availableProcessors = osBean.getAvailableProcessors()
+  override val datasets = Set(DBpediaDatasets.LongAbstracts, DBpediaDatasets.ShortAbstracts)
+
+    private val osBean = java.lang.management.ManagementFactory.getOperatingSystemMXBean
+
+    private val availableProcessors = osBean.getAvailableProcessors
 
     override def extract(pageNode : PageNode, subjectUri : String, pageContext : PageContext): Seq[Quad] =
     {
         //Only extract abstracts for pages from the Main namespace
-        if(pageNode.title.namespace != Namespace.Main) return Seq.empty
+        if(pageNode.title.namespace != Namespace.Main)
+          return Seq.empty
 
         //Don't extract abstracts from redirect and disambiguation pages
-        if(pageNode.isRedirect || pageNode.isDisambiguation) return Seq.empty
+        if(pageNode.isRedirect || pageNode.isDisambiguation)
+          return Seq.empty
 
         //Reproduce wiki text for abstract
         //val abstractWikiText = getAbstractWikiText(pageNode)
         // if(abstractWikiText == "") return Seq.empty
 
         //Retrieve page text
-        var text = retrievePage(pageNode.title /*, abstractWikiText*/)
-
-        text = postProcess(pageNode.title, text)
-
-        if (text.trim.isEmpty)
-          return Seq.empty
+        val text = retrievePage(pageNode.title, pageNode.id) match{
+          case Some(t) => postProcess(pageNode.title, replacePatterns(t))
+          case None => return Seq.empty
+        }
 
         //Create a short version of the abstract
         val shortText = short(text)
@@ -116,7 +137,7 @@ extends PageNodeExtractor
      * @param pageTitle The encoded title of the page
      * @return The page as an Option
      */
-    def retrievePage(pageTitle : WikiTitle/*, pageWikiText : String*/) : String =
+    def retrievePage(pageTitle : WikiTitle, pageId: Long) : Option[String] =
     {
       // The encoded title may contain some URI-escaped characters (e.g. "5%25-Klausel"),
       // so we can't use URLEncoder.encode(). But "&" is not escaped, so we do this here.
@@ -129,24 +150,29 @@ extends PageNodeExtractor
       // Fill parameters
       val parameters = apiParametersFormat.format(titleParam/*, URLEncoder.encode(pageWikiText, "UTF-8")*/)
 
-      val url = new URL(apiUrl)
-      
       for(counter <- 1 to maxRetries)
       {
         try
         {
-          // Send data
-          val conn = url.openConnection
+
+          val conn = apiUrl.openConnection
           conn.setDoOutput(true)
           conn.setConnectTimeout(connectMs)
           conn.setReadTimeout(readMs)
+
           val writer = new OutputStreamWriter(conn.getOutputStream)
           writer.write(parameters)
           writer.flush()
           writer.close()
 
           // Read answer
-          return readInAbstract(conn.getInputStream)
+          return readInAbstract(conn.getInputStream) match{
+            case Success(str) => Option(str)
+            case Failure(e) =>{
+              recordFailedPage(pageId, pageTitle, e)
+              None
+            }
+          }
         }
         catch
         {
@@ -168,25 +194,24 @@ extends PageNodeExtractor
             }
 
             if (counter < maxRetries) {
-              logger.log(Level.INFO, "Error retrieving abstract of " + pageTitle + ". Retrying after " + sleepMs + " ms. Load factor: " + loadFactor, ex)
+              //logger.log(Level.INFO, "Error retrieving abstract of " + pageTitle + ". Retrying after " + sleepMs + " ms. Load factor: " + loadFactor, ex)
               Thread.sleep(sleepMs)
             }
             else {
               ex match {
-                case e : java.net.SocketTimeoutException => logger.log(Level.INFO,
-                  "Timeout error retrieving abstract of " + pageTitle + " in " + counter + " tries. Giving up. Load factor: " +
-                    loadFactor, ex)
-                case _ => logger.log(Level.INFO,
-                  "Error retrieving abstract of " + pageTitle + " in " + counter + " tries. Giving up. Load factor: " +
-                    loadFactor, ex)
+                case e : java.net.SocketTimeoutException => recordFailedPage(pageId, pageTitle, new Exception(
+                  "Timeout error retrieving abstract of " + pageTitle + " in " + counter + " tries. Giving up. Load factor: " + loadFactor, ex))
+                case _ => recordFailedPage(pageId, pageTitle, new Exception(
+                  "Unknown error when retrieving abstract of " + pageTitle + " in " + counter + " tries. Giving up. Load factor: " +
+                    loadFactor, ex))
               }
             }
           }
         }
 
       }
-
-      throw new Exception("Could not retrieve abstract for page: " + pageTitle)
+      recordFailedPage(pageId, pageTitle, new Exception("Could not retrieve abstract after " + maxRetries + " tries for page: " + pageTitle.encoded))
+      None
     }
 
     /**
@@ -195,7 +220,8 @@ extends PageNodeExtractor
      * TODO: probably doesn't work for most non-European languages.
      * TODO: analyse ActiveAbstractExtractor, I think this works  quite well there,
      * because it takes the first two or three sentences
-     * @param text
+      *
+      * @param text
      * @param max max length
      * @return result string
      */
@@ -230,24 +256,30 @@ extends PageNodeExtractor
      * <api> <query> <pages> <page> <extract> ABSTRACT_TEXT <extract> <page> <pages> <query> <api>
      *  ///  <api> <parse> <text> ABSTRACT_TEXT </text> </parse> </api>
      */
-    private def readInAbstract(inputStream : InputStream) : String =
+    private def readInAbstract(inputStream : InputStream) : Try[String] =
     {
       // for XML format
       val xmlAnswer = Source.fromInputStream(inputStream, "UTF-8").getLines().mkString("")
-      //val text = (XML.loadString(xmlAnswer) \ "parse" \ "text").text.trim
-      var text = (XML.loadString(xmlAnswer) \ "query" \ "pages" \ "page" \ "extract").text.trim
-      text = decodeHtml(text)
+      var text = XML.loadString(xmlAnswer).asInstanceOf[NodeSeq]
 
-      for ((regex, replacement) <- AbstractExtractor.patternsToRemove) {
-        val matches = regex.pattern.matcher(text)
-        if (matches.find()) {
-          text = matches.replaceAll(replacement)
-        }
-      }
-      text
+      for(child <- xmlPath)
+        text = text \ child
+
+      decodeHtml(text.text.trim)
     }
 
-    private def postProcess(pageTitle: WikiTitle, text: String): String =
+    private def replacePatterns(abst: String): String= {
+      var ret = abst
+      for ((regex, replacement) <- AbstractExtractor.patternsToRemove) {
+        val matches = regex.pattern.matcher(ret)
+        if (matches.find()) {
+          ret = matches.replaceAll(replacement)
+        }
+      }
+      ret
+    }
+
+    def postProcess(pageTitle: WikiTitle, text: String): String =
     {
       val startsWithLowercase =
       if (text.isEmpty) {
@@ -333,11 +365,11 @@ extends PageNodeExtractor
     }
     */
 
-    def decodeHtml(text: String): String = {
+    def decodeHtml(text: String): Try[String] = {
       val coder = new HtmlCoder(XmlCodes.NONE)
-      coder.setErrorHandler(ParseExceptionIgnorer.INSTANCE)
-      coder.code(text)
+      Try(coder.code(text))
     }
+
 
 }
 

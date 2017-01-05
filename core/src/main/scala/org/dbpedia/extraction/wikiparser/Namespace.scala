@@ -1,7 +1,6 @@
 package org.dbpedia.extraction.wikiparser
 
-import org.dbpedia.extraction.config.mappings.wikidata.{JsonConfig, WikidataExtractorConfigFactory}
-import org.dbpedia.extraction.util.Language
+import org.dbpedia.extraction.util.{JsonConfig, Language}
 import org.dbpedia.extraction.wikiparser.impl.wikipedia.Namespaces
 
 import scala.collection.mutable.HashMap
@@ -49,7 +48,8 @@ private class NamespaceBuilder {
 
   def ns(code: Int, name: String, dbpedia: Boolean) : Namespace = {
     // also create 'talk'namespace, except for the first few namespaces, they are special
-    if (code % 2 == 0 && code >= 2) create(code + 1, name+" talk", dbpedia)
+    if (code % 2 == 0 && code >= 2)
+      create(code + 1, name+" talk", dbpedia)
     create(code, name, dbpedia)
   }
 
@@ -57,14 +57,16 @@ private class NamespaceBuilder {
     val namespace = new Namespace(code, name, dbpedia)
     val previous = values.put(code, namespace)
     require(previous.isEmpty, "duplicate namespace: ["+previous.get+"] and ["+namespace+"]")
-    if (dbpedia) dbpedias(name.toLowerCase(Language.Mappings.locale)) = namespace
+    if (dbpedia)
+      dbpedias(name.toLowerCase(Language.Mappings.locale)) = namespace
     namespace
   }
 
   // Default MediaWiki namespaces
   val mediawiki = Map("Media"-> -2,"Special"-> -1,"Main"->0,"Talk"->1,"User"->2,"Project"->4,"File"->6,"MediaWiki"->8,"Template"->10,"Help"->12,"Category"->14)
   
-  for ((name,code) <- mediawiki) ns(code, name, false)
+  for ((name,code) <- mediawiki)
+    ns(code, name, false)
   
   // The following are used quite differently on different wikipedias, so we use generic names.
   // Most languages use 100-113, but hu uses 90-99.
@@ -72,7 +74,8 @@ private class NamespaceBuilder {
   // wikidata added 120-123, 1198,1199 in early 2013. Let's go up to 1999 to prepare for future additions.
   // en added 2600 in July 2014. Let's go up to 2999. Namespaces > 3000 are discouraged according to 
   // https://www.mediawiki.org/wiki/Extension_default_namespaces
-  for (code <- (90 to 148 by 2) ++ (400 to 2998 by 2)) ns(code, "Namespace "+code, false)
+  for (code <- (90 to 148 by 2) ++ (400 to 2998 by 2))
+    ns(code, "Namespace "+code, false)
     
   // Namespaces used on http://mappings.dbpedia.org, sorted by number. 
   // see http://mappings.dbpedia.org/api.php?action=query&meta=siteinfo&siprop=namespaces
@@ -80,13 +83,14 @@ private class NamespaceBuilder {
   ns(202, "OntologyProperty", true)
   ns(206, "Datatype", true)
 
-  val mappingsFile: JsonConfig = WikidataExtractorConfigFactory.createConfig("/mappinglanguages.json").asInstanceOf[JsonConfig]
+  val mappingsFile: JsonConfig = new JsonConfig(this.getClass.getClassLoader.getResource("mappinglanguages.json"))
   
-  for ((lang,properties) <- mappingsFile.configMap) {
-    val nns : Namespace = ns(new Integer(properties.get("code").get), "Mapping " + lang, true)
+  for (lang <- mappingsFile.keys()) {
+    val properties = mappingsFile.getMap(lang)
+    val nns : Namespace = ns(new Integer(properties.get("code").get.asText), "Mapping " + lang, true)
     mappings(Language(lang)) = nns
     properties.get("chapter") match{
-      case Some(b) => if(java.lang.Boolean.parseBoolean(b)) chapters(Language(lang)) = nns
+      case Some(b) => if(java.lang.Boolean.parseBoolean(b.asText)) chapters(Language(lang)) = nns
       case None =>
     }
   }
