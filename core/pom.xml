@@ -32,6 +32,7 @@
                 </executions>
 
                 <configuration>
+                    <recompileMode>incremental</recompileMode>
                     <launchers>
                     
                         <launcher>

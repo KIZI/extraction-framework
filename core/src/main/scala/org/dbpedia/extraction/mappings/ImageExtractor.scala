@@ -193,9 +193,13 @@ private object ImageExtractor
         val logger = Logger.getLogger(classOf[ImageExtractor].getName)
         val startTime = System.nanoTime
 
+        var i = 0
+
         for(page <- source if page.title.namespace == Namespace.File;
             ImageExtractorConfig.ImageLinkRegex() <- List(page.title.encoded) )
         {
+          if (i % 10000 == 0) logger.info("Processed pages for image extractions: " + i)
+          i = i + 1
             ImageExtractorConfig.NonFreeRegex(wikiCode).findFirstIn(page.source) match
             {
                 case Some(_) => nonFreeImages += page.title.encoded
