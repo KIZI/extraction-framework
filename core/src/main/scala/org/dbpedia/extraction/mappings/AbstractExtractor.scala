@@ -48,6 +48,7 @@ extends PageNodeExtractor
 
   protected val failLogFile = new File(publicParames.get("failedPagesLog").get.asText())
   failLogFile.createNewFile()
+  setLogFile(failLogFile)
 
   protected def apiUrl: URL = new URL(publicParames.get("apiUrl").get.asText())
   require(Try{apiUrl.openConnection().connect()} match {case Success(x)=> true case Failure(e) => false}, "can not connect to the apiUrl")
@@ -109,8 +110,9 @@ extends PageNodeExtractor
 
         //Retrieve page text
         val text = retrievePage(pageNode.title, pageNode.id) match{
-          case Some(t) => postProcess(pageNode.title, replacePatterns(t))
-          case None => return Seq.empty
+          //PROPAN PATCH
+          case Some(t) if t.nonEmpty => postProcess(pageNode.title, replacePatterns(t))
+          case _ => return Seq.empty
         }
 
         //Create a short version of the abstract
@@ -146,7 +148,7 @@ extends PageNodeExtractor
       AbstractExtractor.CHARACTERS_TO_ESCAPE foreach { case (search, replacement) =>
         titleParam = titleParam.replace(search, replacement);
       }
-      
+
       // Fill parameters
       val parameters = apiParametersFormat.format(titleParam/*, URLEncoder.encode(pageWikiText, "UTF-8")*/)
 
@@ -177,7 +179,7 @@ extends PageNodeExtractor
         catch
         {
           case ex: Exception => {
-            
+
             // The web server may still be trying to render the page. If we send new requests
             // at once, there will be more and more tasks running in the web server and the
             // system eventually becomes overloaded. So we wait a moment. The higher the load,
@@ -185,7 +187,7 @@ extends PageNodeExtractor
 
             var loadFactor = Double.NaN
             var sleepMs = sleepFactorMs
- 
+
             // if the load average is not available, a negative value is returned
             val load = osBean.getSystemLoadAverage()
             if (load >= 0) {
@@ -265,7 +267,8 @@ extends PageNodeExtractor
       for(child <- xmlPath)
         text = text \ child
 
-      decodeHtml(text.text.trim)
+      //PROPAN PATCH
+      decodeHtml(text.flatMap(_.child.collect({case x: scala.xml.Text => x.toString()})).mkString.trim)
     }
 
     private def replacePatterns(abst: String): String= {
@@ -359,7 +362,7 @@ extends PageNodeExtractor
                 .filter(renderNode)
                 .map(_.toWikiText)
                 .mkString("").trim
-        
+
         // decode HTML entities - the result is plain text
         decodeHtml(text)
     }

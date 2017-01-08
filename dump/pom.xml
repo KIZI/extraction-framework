@@ -44,12 +44,12 @@
 							</jvmArgs>
 							<args>
 								<!-- base folder of downloaded dumps -->
-								<arg>/data/extraction-data/2016-04</arg>
+								<arg>/root/datasets</arg>
 								<!-- location of SQL file containing MediaWiki table definitions -->
-								<arg>/home/extractor/mediawikiTables.sql</arg>
+								<arg>/var/www/html/mediawiki/maintenance/tables.sql</arg>
 								<!-- JDBC URL of MySQL server. Import creates a new database for 
 									each wiki. -->
-								<arg>jdbc:mysql://localhost/?characterEncoding=UTF-8&amp;user=root</arg>
+								<arg>jdbc:mysql://localhost/?characterEncoding=UTF-8&amp;user=root&amp;password=root</arg>
 								<!-- require-download-complete -->
 								<arg>true</arg> 
 								<!-- file name: pages-articles.xml{,.bz2,.gz} -->
@@ -59,7 +59,7 @@
 								<arg>1</arg>
 								<!-- languages and article count ranges, comma-separated, e.g. "de,en" 
 									or "@mappings" etc. -->
-								<arg>@downloaded</arg>
+								<arg>cs</arg>
 							</args>
 						</launcher>
 

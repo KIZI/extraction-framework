@@ -96,14 +96,14 @@ object Disambiguations
   private class DisambiguationsFinder(lang : Language)
   {
     // (264534,'disambiguation','')
-    val regex = """\((\d+),'disambiguation',''\)""".r
+    val regex = """\((\d+),'disambiguation',''""".r
 
     def apply(reader : () => Reader): Set[Long]=
     {
       val d = HashSet[Long]()
       val r = reader()
       r.foreach { line =>
-        d ++= regex.findAllIn(line).matchData.map { m => m.group(1).toLong }.toSet
+        if (line != null) d ++= regex.findAllIn(line).matchData.map { m => m.group(1).toLong }.toSet
       }
       r.close()
       d.toSet

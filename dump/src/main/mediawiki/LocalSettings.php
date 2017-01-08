@@ -64,10 +64,12 @@ $wgEmailAuthentication = false;
 
 ## Database settings
 $wgDBtype = "mysql";
-$wgDBserver = ":/data/dbpedia-release/mysql/mysql.sock";
+#$wgDBserver = ":/data/dbpedia-release/mysql/mysql.sock";
 $wgDBname = $underscoreLanguageCode."wiki";
 $wgDBuser = "root";
-$wgDBpassword = "";
+$wgDBpassword = "root";
+
+$wgShowExceptionDetails = true;
 
 # MySQL specific settings
 $wgDBprefix = "";
