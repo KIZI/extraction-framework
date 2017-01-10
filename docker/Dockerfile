@@ -4,7 +4,7 @@ MAINTAINER kizi "prozeman@gmail.com"
 
 WORKDIR /root
 
-RUN apt-get update && \
+RUN "apt-get update" && \
     apt-get install -y openjdk-7-jdk git maven && \
     debconf-set-selections <<< 'mysql-server mysql-server/root_password password root' && \
     debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password root' && \
