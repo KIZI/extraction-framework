@@ -6,8 +6,8 @@ WORKDIR /root
 
 RUN "apt-get update" && \
     apt-get install -y openjdk-7-jdk git maven && \
-    debconf-set-selections <<< 'mysql-server mysql-server/root_password password root' && \
-    debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password root' && \
+    /bin/bash -c "debconf-set-selections <<< 'mysql-server mysql-server/root_password password root'" && \
+    /bin/bash -c "debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password root'" && \
     apt-get -y install mysql-server && \
     apt-get -y install apache2 wget php5 libapache2-mod-php5 php5-apcu php5-mysql php5-dev liblua5.1-dev
     
@@ -22,19 +22,12 @@ RUN wget https://releases.wikimedia.org/mediawiki/1.28/mediawiki-1.28.0.tar.gz &
     git clone -b REL1_28 https://gerrit.wikimedia.org/r/p/mediawiki/extensions/CharInsert.git && \
     git clone -b REL1_28 https://gerrit.wikimedia.org/r/p/mediawiki/extensions/MobileFrontend.git && \
     git clone -b REL1_28 https://gerrit.wikimedia.org/r/p/mediawiki/extensions/CategoryTree.git && \
-    git clone -b REL1_28 https://gerrit.wikimedia.org/r/mediawiki/extensions/Cite.git && \
-    git clone -b REL1_28 https://gerrit.wikimedia.org/r/p/mediawiki/extensions/Interwiki.git && \
-    git clone -b REL1_28 https://gerrit.wikimedia.org/r/p/mediawiki/extensions/SyntaxHighlight_GeSHi.git && \
     git clone https://gerrit.wikimedia.org/r/p/mediawiki/php/luasandbox.git && \
-    git clone -b REL1_28 https://gerrit.wikimedia.org/r/p/mediawiki/extensions/InputBox.git && \
     git clone -b REL1_28 https://gerrit.wikimedia.org/r/p/mediawiki/extensions/GeoData.git && \
     git clone -b REL1_26 https://gerrit.wikimedia.org/r/p/mediawiki/extensions/ExpandTemplates.git && \
     git clone -b REL1_28 https://gerrit.wikimedia.org/r/p/mediawiki/extensions/Babel.git && \
     git clone -b REL1_28 https://gerrit.wikimedia.org/r/p/mediawiki/extensions/Scribunto.git && \
-    git clone -b REL1_28 https://gerrit.wikimedia.org/r/mediawiki/extensions/ParserFunctions.git && \
-    git clone -b REL1_28 https://gerrit.wikimedia.org/r/p/mediawiki/extensions/Poem.git && \
     git clone -b REL1_28 https://gerrit.wikimedia.org/r/p/mediawiki/extensions/TextExtracts.git && \
-    git clone -b REL1_28 https://gerrit.wikimedia.org/r/p/mediawiki/extensions/ImageMap.git && \
     git clone -b REL1_28 https://gerrit.wikimedia.org/r/p/mediawiki/extensions/Math.git && \
     git clone -b REL1_28 https://gerrit.wikimedia.org/r/p/mediawiki/extensions/wikihiero.git && \
     git clone -b REL1_28 https://gerrit.wikimedia.org/r/p/mediawiki/extensions/Mantle.git && \
