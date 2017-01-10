@@ -1,6 +1,6 @@
 {
   "publicParams":{
-    "maxRetries": 15,
+    "maxRetries": 10,
     "apiUrl": "http://localhost/mediawiki/api.php",
     "connectMs": 2000,
     "readMs": 5000 ,
