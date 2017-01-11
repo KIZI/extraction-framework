@@ -34,6 +34,9 @@ RUN wget https://releases.wikimedia.org/mediawiki/1.28/mediawiki-1.28.0.tar.gz &
     cd luasandbox && \
     phpize && ./configure && make && make install && \
     cp luasandbox.ini /etc/php5/apache2/conf.d && \
+    cp luasandbox.ini /etc/php5/cli/conf.d && \
+    echo 'apc.enabled=1' >> /etc/php5/mods-available/apcu.ini && \
+    echo 'apc.enable_cli=1' >> /etc/php5/mods-available/apcu.ini && \
     chown -R root:www-data /var/www/html/mediawiki && \
     chmod -R 775 /var/www/html/mediawiki    
 
