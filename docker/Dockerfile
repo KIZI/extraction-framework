@@ -12,6 +12,7 @@ RUN apt-get update && \
     apt-get -y install apache2 wget php5 libapache2-mod-php5 php5-apcu php5-mysql php5-dev liblua5.1-dev
     
 ADD my.cnf /etc/mysql/my.cnf
+ADD start.sh /root
 
 RUN wget https://releases.wikimedia.org/mediawiki/1.28/mediawiki-1.28.0.tar.gz && \
     tar -zxvf mediawiki-1.28.0.tar.gz && \
@@ -46,22 +47,9 @@ RUN git clone -b cs-docker-v1 https://github.com/KIZI/extraction-framework.git &
     mkdir datasets && \
     cd extraction-framework && \
     cp dump/src/main/mediawiki/LocalSettings.php /var/www/html/mediawiki && \
-    mvn clean install
+    mvn clean install && \
+    chmod 775 /root/start.sh
     
 WORKDIR /root/extraction-framework
 
-CMD cd core && \
-    ../run download-ontology && \
-    ../run download-mappings && \
-    ../run generate-settings && \
-    cd .. && \
-    mvn install && \
-    cd dump && \
-    ../run download config=download.cs.properties && \
-    service mysql start && \
-    ../run import && \
-    service apache2 start && \
-    ../run extraction extraction.abstracts.cs.properties && \
-    service apache2 stop && \
-    service mysql stop && \
-    ../run extraction extraction.cs.properties
+ENTRYPOINT ["/root/start.sh"]
