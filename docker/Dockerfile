@@ -1,3 +1,4 @@
+# docker build -t dbpedia-cs-extractor https://github.com/KIZI/extraction-framework.git#cs-docker-v1:docker
 FROM debian:jessie
 
 MAINTAINER kizi "prozeman@gmail.com"

@@ -166,5 +166,5 @@ require_once( "$IP/extensions/timeline/Timeline.php" );
 require_once( "$IP/extensions/wikihiero/wikihiero.php" );
 require_once( "$IP/extensions/Scribunto/Scribunto.php");
 require_once( "$IP/extensions/Mantle/Mantle.php");
-$wgScribuntoDefaultEngine = 'luastandalone';
-#$wgScribuntoDefaultEngine = 'luasandbox'; # faster but needs configuration read http://www.mediawiki.org/wiki/Extension:Scribunto
+#$wgScribuntoDefaultEngine = 'luastandalone';
+$wgScribuntoDefaultEngine = 'luasandbox'; # faster but needs configuration read http://www.mediawiki.org/wiki/Extension:Scribunto
