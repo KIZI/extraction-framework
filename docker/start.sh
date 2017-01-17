@@ -1,8 +1,16 @@
 #!/bin/bash
 
+IS_TERMINATED=false
+
+_term() {  
+  IS_TERMINATED=true 
+}
+
+trap _term SIGTERM SIGINT
+
 startedFile="/root/started"
 if [[ -f "$startedFile" ]]; then
-/bin/bash
+while ! $IS_TERMINATED; do sleep 5; done
 else
 
 touch $startedFile
