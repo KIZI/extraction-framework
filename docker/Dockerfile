@@ -1,5 +1,5 @@
 # docker build -t dbpedia-cs-extractor https://github.com/KIZI/extraction-framework.git#cs-docker-v1:docker
-# docker run -d --name dbpedia-cs-extractor dbpedia-cs-extractor
+# docker run -d --name dbpedia-cs-extractor dbpedia-cs-extractor -l=cs
 FROM debian:jessie
 
 MAINTAINER kizi "prozeman@gmail.com"
@@ -45,12 +45,14 @@ RUN wget https://releases.wikimedia.org/mediawiki/1.28/mediawiki-1.28.0.tar.gz &
 
 ENV JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF-8"
 
-RUN git clone -b cs-docker-v1 https://github.com/KIZI/extraction-framework.git && \
+RUN git clone https://github.com/KIZI/extraction-framework.git && \
     mkdir datasets && \
     cd extraction-framework && \
-    cp dump/src/main/mediawiki/LocalSettings.php /var/www/html/mediawiki && \
     mvn clean install && \
     chmod 775 /root/start.sh
+    
+ADD LocalSettings.php /var/www/html/mediawiki
+ADD *doc.properties extraction-framework/dump
     
 WORKDIR /root/extraction-framework
 
