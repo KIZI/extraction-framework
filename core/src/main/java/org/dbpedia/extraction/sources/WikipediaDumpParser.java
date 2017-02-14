@@ -2,10 +2,12 @@ package org.dbpedia.extraction.sources;
 
 import org.dbpedia.extraction.util.Language;
 import org.dbpedia.extraction.wikiparser.*;
+import org.dbpedia.extraction.wikiparser.impl.wikipedia.Namespaces;
 import org.dbpedia.util.Exceptions;
 import org.dbpedia.util.text.xml.XMLStreamUtils;
 
 import scala.Function1;
+import scala.Option;
 import scala.util.control.ControlThrowable;
 
 import javax.xml.stream.XMLInputFactory;
@@ -219,13 +221,13 @@ public class WikipediaDumpParser
     {
       try
       {
-        Namespace expected = Namespace.values().apply(nsCode);
-        logger.log(Level.WARNING, "Error parsing title: found namespace "+title.namespace()+", expected "+expected+" in title "+titleStr);
-        title.otherNamespace_$eq(expected);
+        Namespace expNs = new Namespace(nsCode, Namespaces.names(_language).get(nsCode).get(), false);
+        logger.log(Level.WARNING, _language.wikiCode() + ": Error parsing title: found namespace " + title.namespace() + ", expected " + expNs + " in title " + titleStr);
+        title.otherNamespace_$eq(expNs);
       }
       catch (NoSuchElementException e)
       {
-        logger.log(Level.WARNING, String.format("Error parsing title: found namespace %s, title %s , key %s", title.namespace(),titleStr, nsCode));
+        logger.log(Level.WARNING, String.format(_language.wikiCode() + ": Error parsing title: found namespace %s, title %s , key %s", title.namespace(),titleStr, nsCode));
         skipTitle();
         return;
       }
@@ -276,7 +278,7 @@ public class WikipediaDumpParser
         // emulate Scala exception handling. Ugly...
         if (e instanceof ControlThrowable) throw Exceptions.unchecked(e);
         if (e instanceof InterruptedException) throw (InterruptedException)e;
-        else logger.log(Level.WARNING, "error processing page  '"+title+"': "+Exceptions.toString(e, 200));
+        else logger.log(Level.WARNING, _language.wikiCode() + ": error processing page  '"+title+"': "+Exceptions.toString(e, 200));
       }
     }
     
@@ -378,10 +380,8 @@ public class WikipediaDumpParser
    */
   
   /**
-   * @param name expected name of element. if null, don't check name.
-   * @param nextTag should we advance to the next tag after the closing tag of this element?
+   * @param titleString expected name of element. if null, don't check name.
    * @return null if title cannot be parsed for some reason
-   * @throws XMLStreamException
    */
   private WikiTitle parseTitle( String titleString )
   {
@@ -391,7 +391,7 @@ public class WikipediaDumpParser
     }
     catch (Exception e)
     {
-      logger.log(Level.WARNING, "error parsing page title ["+titleString+"]: "+Exceptions.toString(e, 200));
+      logger.log(Level.WARNING, _language.wikiCode() + ": error parsing page title ["+titleString+"]: "+Exceptions.toString(e, 200));
       return null;
     }
   }

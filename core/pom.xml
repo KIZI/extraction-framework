@@ -21,17 +21,8 @@
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
 
-                <executions>
-                    <execution>
-                        <id>attach-docs-sources</id>
-                        <goals>
-                            <goal>add-source</goal>
-                            <goal>doc-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-
                 <configuration>
+                    <recompileMode>incremental</recompileMode>
                     <launchers>
                     
                         <launcher>
@@ -140,7 +131,6 @@
             <artifactId>jackson-module-scala_2.11</artifactId>
             <version>2.5.0</version>
         </dependency>
-
     </dependencies>
 
 </project>

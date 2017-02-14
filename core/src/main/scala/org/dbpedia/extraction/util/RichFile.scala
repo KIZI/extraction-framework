@@ -4,6 +4,7 @@ import java.io.{IOException,File,FilenameFilter,InputStream,FileInputStream,Outp
 import java.util.regex.Pattern
 import RichFile._
 import scala.language.implicitConversions
+import scala.util.{Failure, Success, Try}
 
 object RichFile {
 
@@ -33,7 +34,7 @@ class RichFile(file: File) extends FileLike[File] {
     if (name.nonEmpty) name else if (file.isAbsolute) null else name
   }
   
-  override def exists: Boolean = file.exists
+  override def exists: Boolean = file.getAbsoluteFile.exists
   
   // TODO: more efficient type than List?
   override def names: List[String] = names(null) 
@@ -57,10 +58,11 @@ class RichFile(file: File) extends FileLike[File] {
     list.toList
   }
   
-  override def resolve(name: String): File = new File(file, name)
+  override def resolve(name: String): Try[File] = Try(new File(file, name))
   
   /**
    * Retrieves the relative path in respect to a given base directory.
+ *
    * @param child
    * @return path from parent to child. uses forward slashes as separators. may be empty.
    * does not end with a slash.
@@ -76,6 +78,7 @@ class RichFile(file: File) extends FileLike[File] {
   /**
    * Deletes this file or directory and, if this is a directory and recursive is true,
    * all contained file and sub directories.
+ *
    * @throws IOException if the directory or any of its sub directories could not be deleted
    */
   override def delete(recursive: Boolean = false): Unit = {
@@ -92,5 +95,6 @@ class RichFile(file: File) extends FileLike[File] {
   override def inputStream(): InputStream = new FileInputStream(file)
   
   override def outputStream(append: Boolean = false): OutputStream = new FileOutputStream(file, append)
-  
+
+  override def getFile: File = file
 }

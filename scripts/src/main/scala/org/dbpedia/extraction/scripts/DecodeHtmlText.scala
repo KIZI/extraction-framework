@@ -1,6 +1,7 @@
 package org.dbpedia.extraction.scripts
 
 import org.dbpedia.extraction.util.ConfigUtils.parseLanguages
+import org.dbpedia.extraction.util.DateFinder
 import org.dbpedia.extraction.util.TurtleUtils.escapeTurtle
 import org.dbpedia.extraction.util.RichFile.wrapFile
 import java.io.File
@@ -70,7 +71,7 @@ object DecodeHtmlText {
           val decoded = coder.code(quad.value)
           List(quad.copy(value = decoded))
         }
-        err.println(language.wikiCode+": "+finder.find(input + suffix)+" : found "+counter.errors()+" HTML character reference errors")
+        err.println(language.wikiCode+": "+finder.byName(input + suffix).get+" : found "+counter.errors()+" HTML character reference errors")
         counter.reset()
         first = false
       }

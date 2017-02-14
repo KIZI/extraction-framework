@@ -78,6 +78,18 @@
                             </jvmArgs>
                         </launcher>
                         <launcher>
+                            <id>SdTypeCreator</id>
+                            <mainClass>org.dbpedia.extraction.scripts.SdTypeCreation</mainClass>
+                            <jvmArgs>
+                                <jvmArg>-server</jvmArg>
+                                <jvmArg>-Xmx16G</jvmArg>
+                                <jvmArg>-Xms4G</jvmArg>
+                                <jvmArg>-XX:+HeapDumpOnOutOfMemoryError</jvmArg>
+                                <jvmArg>-XX:+UseConcMarkSweepGC</jvmArg>
+                                <jvmArg>-XX:-UseGCOverheadLimit</jvmArg>
+                            </jvmArgs>
+                        </launcher>
+                        <launcher>
                             <id>CreateIriSameAsUriLinks</id>
                             <mainClass>org.dbpedia.extraction.scripts.CreateIriSameAsUriLinks</mainClass>
                             <jvmArgs>
@@ -155,6 +167,30 @@
                         <launcher>
                             <id>MapObjectUris</id>
                             <mainClass>org.dbpedia.extraction.scripts.MapObjectUris</mainClass>
+                            <jvmArgs>
+                                <jvmArg>-server</jvmArg>
+                                <jvmArg>-Xmx10G</jvmArg><!-- processing languages in parallel takes a lot of space -->
+                                <jvmArg>-XX:+HeapDumpOnOutOfMemoryError</jvmArg>
+                                <jvmArg>-XX:+UseConcMarkSweepGC</jvmArg>
+                                <jvmArg>-XX:+PrintGC</jvmArg>
+                                <jvmArg>-XX:+PrintGCTimeStamps</jvmArg>
+                            </jvmArgs>
+                        </launcher>
+                        <launcher>
+                            <id>MapSubjectUris</id>
+                            <mainClass>org.dbpedia.extraction.scripts.MapSubjectUris</mainClass>
+                            <jvmArgs>
+                                <jvmArg>-server</jvmArg>
+                                <jvmArg>-Xmx10G</jvmArg><!-- processing languages in parallel takes a lot of space -->
+                                <jvmArg>-XX:+HeapDumpOnOutOfMemoryError</jvmArg>
+                                <jvmArg>-XX:+UseConcMarkSweepGC</jvmArg>
+                                <jvmArg>-XX:+PrintGC</jvmArg>
+                                <jvmArg>-XX:+PrintGCTimeStamps</jvmArg>
+                            </jvmArgs>
+                        </launcher>
+                        <launcher>
+                            <id>CleanExternalDataset</id>
+                            <mainClass>org.dbpedia.extraction.scripts.CleanExternalDataset</mainClass>
                             <jvmArgs>
                                 <jvmArg>-server</jvmArg>
                                 <jvmArg>-Xmx10G</jvmArg><!-- processing languages in parallel takes a lot of space -->
@@ -256,14 +292,24 @@
                             <id>TypeStatistics</id>
                             <mainClass>org.dbpedia.extraction.statistics.TypeStatistics</mainClass>
                             <jvmArgs>
-                                <jvmArg>-Xms4G</jvmArg>
-                                <jvmArg>-Xmx8G</jvmArg>
+                                <jvmArg>-Xms8G</jvmArg>
+                                <jvmArg>-Xmx16G</jvmArg>
                                 <jvmArg>-server</jvmArg>
                                 <jvmArg>-XX:+UseConcMarkSweepGC</jvmArg>
                             </jvmArgs>
                         </launcher>
                         <launcher>
-                            <id>PostProcessinfStats</id>
+                            <id>RepairAbstracts</id>
+                            <mainClass>org.dbpedia.extraction.scripts.AbstractRepair</mainClass>
+                            <jvmArgs>
+                                <jvmArg>-Xms8G</jvmArg>
+                                <jvmArg>-Xmx16G</jvmArg>
+                                <jvmArg>-server</jvmArg>
+                                <jvmArg>-XX:+UseConcMarkSweepGC</jvmArg>
+                            </jvmArgs>
+                        </launcher>
+                        <launcher>
+                            <id>PostProcessingStats</id>
                             <mainClass>org.dbpedia.extraction.statistics.StatsPostProcessing</mainClass>
                             <jvmArgs>
                                 <jvmArg>-Xms4G</jvmArg>
@@ -309,6 +355,10 @@
             <artifactId>core</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_2.11</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-reflect</artifactId>
             <version>2.11.4</version>
@@ -352,6 +402,12 @@
             <groupId>org.scalaj</groupId>
             <artifactId>scalaj-http_2.11</artifactId>
             <version>2.2.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-validator</groupId>
+            <artifactId>commons-validator</artifactId>
+            <version>1.5.1</version>
         </dependency>
     </dependencies>
 

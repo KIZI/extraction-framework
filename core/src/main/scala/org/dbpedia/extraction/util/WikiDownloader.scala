@@ -64,7 +64,7 @@ class WikiDownloader(val apiUrl : String) {
     {
       val url = buildURL(namespace, gapcontinue)
       gapcontinue = null
-      
+
       val stream = url.openStream
       try
       {

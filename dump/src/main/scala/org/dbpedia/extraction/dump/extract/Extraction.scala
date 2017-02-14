@@ -2,6 +2,8 @@ package org.dbpedia.extraction.dump.extract
 
 import org.dbpedia.extraction.util.ProxyAuthenticator
 import java.net.Authenticator
+import java.util.logging.{Level, LogManager}
+
 import org.dbpedia.extraction.util.ConfigUtils
 
 /**
@@ -16,6 +18,12 @@ object Extraction {
   def main(args: Array[String]): Unit = {
     require(args != null && args.length >= 1 && args(0).nonEmpty, "missing required argument: config file name")
     Authenticator.setDefault(new ProxyAuthenticator())
+
+    val defaultLogLevel = Level.INFO
+
+    val logger = LogManager.getLogManager.getLogger("")
+    logger.setLevel(defaultLogLevel)
+    logger.getHandlers.foreach(_.setLevel(defaultLogLevel))
     
     // Load properties
     val config = ConfigUtils.loadConfig(args(0), "UTF-8")

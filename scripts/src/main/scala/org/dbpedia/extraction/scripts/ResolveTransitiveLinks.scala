@@ -2,7 +2,7 @@ package org.dbpedia.extraction.scripts
 
 import org.dbpedia.extraction.util.ConfigUtils.parseLanguages
 import org.dbpedia.extraction.util.RichFile.wrapFile
-import org.dbpedia.extraction.util.{TransitiveClosure, IOUtils}
+import org.dbpedia.extraction.util.{DateFinder, TransitiveClosure, IOUtils}
 import scala.collection.mutable.LinkedHashMap
 import java.io.File
 import scala.Console.err
@@ -68,7 +68,7 @@ object ResolveTransitiveLinks {
         err.println("length "+cycle.size+": ["+cycle.mkString(" ")+"]")
       }
       
-      val file = finder.find(output + suffix)
+      val file = finder.byName(output + suffix).get
       err.println(language.wikiCode+": writing "+file+" ...")
       val writer = IOUtils.writer(file)
       try {

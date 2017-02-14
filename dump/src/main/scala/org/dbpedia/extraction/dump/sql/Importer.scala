@@ -1,44 +1,37 @@
 package org.dbpedia.extraction.dump.sql
 
-import com.mysql.jdbc.MysqlDataTruncation
-import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException
-import org.dbpedia.extraction.sources.Source
-import org.dbpedia.extraction.util.StringUtils
-import scala.collection.mutable.HashMap
+import org.dbpedia.extraction.sources.{WikiPage, Source}
+import org.dbpedia.extraction.util.{Language, StringUtils}
 import java.lang.StringBuilder
 import java.sql.Connection
 import java.sql.SQLException
 import scala.util.control.ControlThrowable
+import scala.Console._
 
 /**
  * This class is basically mwdumper's SqlWriter ported to Scala.
  */
-class Importer(conn: Connection) {
+class Importer(conn: Connection, lang: Language = null) {
   
-  private val builders = new HashMap[String, StringBuilder]()
-  
-  private val blockSize = 2 << 20 // SQL statements are 1M chars long
+  private var failedPages = Map[Long, String]()
   
   private var pages = 0
   
   private val time = System.currentTimeMillis
     
-  def process(source: Source): Unit = {
+  def process(source: Source): Int = {
     
     for (page <- source) {
-      
       pages += 1
-      
-      val length = lengthUtf8(page.source)
-      insert(new Page(page.id, page.revision, page.title, page.redirect, length))
-      insert(new Revision(page.id, page.revision, length))
-      insert(new Text(page.revision, page.source))
-      
+      insertPageContent(page)
       if (pages % 2000 == 0) logPages()
     }
-    
-    flush()
+
     logPages()
+    for(fail <- failedPages)
+      println(lang.wikiCode + ": page failed to import: " + fail._1)
+
+    pages
   }
   
   private def lengthUtf8(text: String): Int = {
@@ -59,26 +52,8 @@ class Importer(conn: Connection) {
     len
   }
   
-  private def insert(insert: Insert): Unit = {
-    var builder = builders.getOrElse(insert.table, null)
-    if (builder == null) {
-      // add 64K - statement is built until it *exceeds* block size
-      builder = new StringBuilder(blockSize + (2 << 16)) 
-      builders.put(insert.table, builder)
-      appendStatement(builder, insert)
-    }
-    else {
-      // because of this silly comma, we can't really use getOrElseUpdate() above...
-      builder.append(',')
-      appendValues(builder, insert)
-    }
-
-    if (builder.length >= blockSize) {
-      flush(insert.table)
-    }
-  }
-  
-  private def appendStatement(sql: StringBuilder, insert: Insert): Unit = {
+  private def writeInsertStatement(insert: Insert): StringBuilder = {
+    val sql = new StringBuilder()
     sql.append("INSERT INTO ")
     sql.append(insert.table)
     sql.append(" (")
@@ -90,6 +65,7 @@ class Importer(conn: Connection) {
     }
     sql.append(") VALUES ")
     appendValues(sql, insert)
+    sql
   }
   
   private val replacements = {
@@ -129,31 +105,33 @@ class Importer(conn: Connection) {
     sql.append(')')
   }
   
-  private def flush(): Unit = {
-    for (table <- builders.keys) flush(table)
-  }
-  
-  private def flush(table: String): Unit = {
-    val sql = builders.remove(table).get.toString
+  private def insertPageContent(page: WikiPage): Unit = {
+    val builder = new StringBuilder()
+    val length = lengthUtf8(page.source)
+    builder.append(writeInsertStatement(new Page(page.id, page.revision, page.title, page.redirect, length)))
+    builder.append(';')
+    builder.append(writeInsertStatement(new Revision(page.id, page.revision, length)))
+    builder.append(';')
+    builder.append(writeInsertStatement(new Text(page.id, page.revision, page.source)))
+    builder.append(';')
     val stmt = conn.createStatement()
     stmt.setEscapeProcessing(false)
     try {
-      stmt.execute(sql)
+      stmt.execute(builder.toString)
     }
     catch {
       // throw our own exception that our XML parser won't catch
-      case icv: MySQLIntegrityConstraintViolationException =>       //catch unique key violations (which will occur...)
-      case dce: MysqlDataTruncation =>                              //catch if data is too long for a column
-      case sqle: SQLException => throw new ImporterException(sqle)
+      case e: Throwable => println(lang.wikiCode + ": " + e.getClass.getSimpleName + " occurred for page: " + page.id + " - " + e.getMessage)      //catch unique key violations (which will occur...)
+      failedPages += (page.id -> e.getMessage)
     }
-    finally stmt.close
+    finally stmt.close()
   }
   
   private def logPages(): Unit = {
     val millis = System.currentTimeMillis - time
-    println("imported "+pages+" pages in "+StringUtils.prettyMillis(millis)+" ("+(millis.toDouble/pages)+" millis per page)")
+    println(lang.wikiCode + ": imported "+(pages - failedPages.size)+
+      " pages in "+StringUtils.prettyMillis(millis)+" ("+(millis.toDouble/pages)+" millis per page)")
   }
-  
 }
 
 /**

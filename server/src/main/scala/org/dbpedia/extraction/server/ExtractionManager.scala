@@ -1,16 +1,17 @@
 package org.dbpedia.extraction.server
 
-import org.dbpedia.extraction.util.Language
-import org.dbpedia.extraction.ontology.Ontology
-import scala.xml.Elem
-import java.util.logging.{Level, Logger}
-import org.dbpedia.extraction.ontology.io.OntologyReader
-import org.dbpedia.extraction.destinations.Destination
-import org.dbpedia.extraction.sources.{XMLSource, WikiSource, Source, WikiPage}
-import org.dbpedia.extraction.mappings._
-import org.dbpedia.extraction.wikiparser._
 import java.io.File
-import java.net.URL
+import java.util.logging.{Level, Logger}
+
+import org.dbpedia.extraction.destinations.Destination
+import org.dbpedia.extraction.mappings._
+import org.dbpedia.extraction.ontology.Ontology
+import org.dbpedia.extraction.ontology.io.OntologyReader
+import org.dbpedia.extraction.sources.{Source, WikiPage, WikiSource, XMLSource}
+import org.dbpedia.extraction.util.Language
+import org.dbpedia.extraction.wikiparser._
+
+import scala.xml.Elem
 
 /**
  * Base class for extraction managers.
@@ -29,9 +30,9 @@ abstract class ExtractionManager(
     
     private val logger = Logger.getLogger(classOf[ExtractionManager].getName)
 
-    def mappingExtractor(language : Language) : RootExtractor
+    def mappingExtractor(language : Language) : WikiPageExtractor
 
-    def customExtractor(language : Language) : RootExtractor
+    def customExtractor(language : Language) : WikiPageExtractor
 
     def ontology() : Ontology
 
@@ -61,7 +62,7 @@ abstract class ExtractionManager(
     def extract(source: Source, destination: Destination, language: Language, useCustomExtraction: Boolean = false): Unit = {
       val extract = if (useCustomExtraction) customExtractor(language) else mappingExtractor(language)
       destination.open()
-      for (page <- source) destination.write(extract(page))
+      for (page <- source) destination.write(extract.extract(page))
       destination.close()
     }
 
@@ -175,25 +176,23 @@ abstract class ExtractionManager(
         new OntologyReader().read(ontologyPages.values)
     }
 
-    protected def loadMappingTestExtractors(): Map[Language, RootExtractor] =
+    protected def loadMappingTestExtractors(): Map[Language, WikiPageExtractor] =
     {
         val extractors = languages.map(lang => (lang, loadExtractors(lang, mappingTestExtractors))).toMap
         logger.info("All mapping test extractors loaded for languages "+languages.map(_.wikiCode).sorted.mkString(","))
         extractors
     }
 
-    protected def loadCustomTestExtractors(): Map[Language, RootExtractor] =
+    protected def loadCustomTestExtractors(): Map[Language, WikiPageExtractor] =
     {
       val extractors = languages.map(lang => (lang, loadExtractors(lang,customTestExtractors(lang)))).toMap
       logger.info("All custom extractors loaded for languages "+languages.map(_.wikiCode).sorted.mkString(","))
       extractors
     }
 
-    protected def loadExtractors(lang : Language, classes: Seq[Class[_ <: Extractor[_]]]): RootExtractor =
+    protected def loadExtractors(lang : Language, classes: Seq[Class[_ <: Extractor[_]]]): WikiPageExtractor =
     {
-      new RootExtractor(
         CompositeParseExtractor.load(classes,self.getExtractionContext(lang))
-      )
     }
 
     protected def getExtractionContext(lang: Language) = {

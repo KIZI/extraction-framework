@@ -5,13 +5,10 @@ import java.io.File
 import org.dbpedia.extraction.util.RichFile.wrapFile
 import org.dbpedia.extraction.util.ConfigUtils.{loadConfig,parseLanguages,getString,getValue,getStrings}
 import org.dbpedia.extraction.destinations.formatters.UriPolicy.parseFormats
-import scala.collection.Set
-import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer,HashSet}
 import org.dbpedia.extraction.destinations.{Quad,Destination,CompositeDestination,WriterDestination}
 import org.dbpedia.extraction.util.IOUtils.writer
 import org.dbpedia.extraction.util.Finder
-import org.dbpedia.extraction.ontology.RdfNamespace
 import org.dbpedia.extraction.util.Language
 import org.dbpedia.extraction.wikiparser.Namespace
 import org.dbpedia.extraction.util.TurtleUtils
@@ -68,7 +65,7 @@ object CreateFlickrWrapprLinks {
       
       def processTitles(name: String, include: Boolean): Unit = {
         
-        QuadReader.readQuads(language.wikiCode+": "+(if (include) "add" else "sub")+" uris in "+name, finder.file(date, name)) { quad =>
+        QuadReader.readQuads(language.wikiCode+": "+(if (include) "add" else "sub")+" uris in "+name, finder.file(date, name).get) { quad =>
           val subject = quad.subject
           if (! subject.startsWith(inPrefix)) error("bad subject: "+subject)
           
@@ -101,7 +98,7 @@ object CreateFlickrWrapprLinks {
       
       val formatDestinations = new ArrayBuffer[Destination]()
       for ((suffix, format) <- formats) {
-        val file = finder.file(date, output+'.'+suffix)
+        val file = finder.file(date, output+'.'+suffix).get
         formatDestinations += new WriterDestination(() => writer(file), format)
       }
       val destination = new CompositeDestination(formatDestinations.toSeq: _*)
