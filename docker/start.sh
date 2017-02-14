@@ -102,6 +102,7 @@ fi
 sed -i -- "s/!LANG!/$LANGUAGE/g" /root/extraction-framework/dump/download.doc.properties
 sed -i -- "s/!LANG!/$LANGUAGE/g" /root/extraction-framework/dump/extraction.abstracts.doc.properties
 sed -i -- "s/!LANG!/$LANGUAGE/g" /root/extraction-framework/dump/extraction.doc.properties
+sed -i -- "s/!LANG!/$LANGUAGE/g" /root/extraction-framework/dump/pom.xml
 
 sed -i -- "s/!EXTRACT0RS!/$EXTRACTORS/g" /root/extraction-framework/dump/extraction.doc.properties
 

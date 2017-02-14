@@ -59,7 +59,7 @@
 								<arg>1</arg>
 								<!-- languages and article count ranges, comma-separated, e.g. "de,en" 
 									or "@mappings" etc. -->
-								<arg>cs</arg>
+								<arg>!LANG!</arg>
 							</args>
 						</launcher>
 

@@ -1,4 +1,4 @@
-# docker build -t dbpedia-cs-extractor https://github.com/KIZI/extraction-framework.git#cs-docker-v1:docker
+# docker build -t dbpedia-cs-extractor https://github.com/KIZI/extraction-framework.git#:docker
 # docker run -d --name dbpedia-cs-extractor dbpedia-cs-extractor -l=cs
 FROM debian:jessie
 
@@ -52,7 +52,7 @@ RUN git clone https://github.com/KIZI/extraction-framework.git && \
     chmod 775 /root/start.sh
     
 ADD LocalSettings.php /var/www/html/mediawiki
-ADD *doc.properties extraction-framework/dump
+ADD *doc.properties extraction-framework/dump/
     
 WORKDIR /root/extraction-framework
 
