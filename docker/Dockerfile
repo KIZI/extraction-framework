@@ -1,5 +1,5 @@
-# docker build -t dbpedia-cs-extractor https://github.com/KIZI/extraction-framework.git#:docker
-# docker run -d --name dbpedia-cs-extractor dbpedia-cs-extractor -l=cs
+# docker build -t dbpedia-extractor https://github.com/KIZI/extraction-framework.git#master:docker
+# docker run -d --name dbpedia-extractor dbpedia-extractor -l=cs
 FROM debian:jessie
 
 MAINTAINER kizi "prozeman@gmail.com"
