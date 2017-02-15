@@ -1,4 +1,4 @@
-# DBpedia extraction framework with Docker
+# DBpedia extraction framework in Docker
 
 This is a fork of the dbpedia extraction framework which contains a Dockerfile for using the extractor wihin the Docker environment. This fork has also adapted some scripts in order to simplify some operations in Docker.
 
